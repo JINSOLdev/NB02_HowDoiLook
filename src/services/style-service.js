@@ -28,20 +28,53 @@ export const createStyle = async ({ nickname, title, content, password, categori
 };
 
 // 스타일 목록조회
+// export const getStyleList = async () => {
+//   const styleList = await db.style.findMany({
+//     include: {
+//       categories: true,
+//       styleTags: { include: { tag: true } },
+//       styleImages: true,
+//     },
+//   });
+
+//   const totalCount = await db.style.count();
+
+//   return {
+//     totalCount,
+//     list: styleList,
+//   };
+// };
+
 export const getStyleList = async () => {
   const styleList = await db.style.findMany({
     include: {
       categories: true,
       styleTags: { include: { tag: true } },
-      images: true,
+      styleImages: { include: { image: true } }, // 수정됨
+      _count: { select: { curations: true } }, // controller 쪽과 맞춤
     },
   });
 
-  const totalCount = await db.style.count();
+  const totalItemCount = await db.style.count();
+
+  const data = styleList.map((style) => ({
+    id: style.id, // 이제 잘 들어옴
+    thumbnail: style.styleImages?.[0]?.image?.url || null,
+    nickname: style.nickname,
+    title: style.title,
+    tags: style.styleTags.map((tagObj) => tagObj.tag.name),
+    categories: categoriesArrayToObject(style.categories),
+    content: style.content,
+    viewCount: style.viewCount,
+    curationCount: style._count.curations,
+    createdAt: style.createdAt,
+  }));
 
   return {
-    totalCount,
-    list: styleList,
+    currentPage: 1,
+    totalPages: 1,
+    totalItemCount,
+    data,
   };
 };
 

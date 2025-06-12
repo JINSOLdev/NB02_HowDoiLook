@@ -129,7 +129,7 @@ export class StyleController {
       else if (sort === 'curation') orderBy = { curationCount: 'desc' };
       else orderBy = { createdAt: 'desc' };
 
-      const [total, styles] = await Promise.all([
+      const [totalItemCount, styles] = await Promise.all([
         prisma.style.count({ where }),
         prisma.style.findMany({
           where,
@@ -145,15 +145,34 @@ export class StyleController {
         }),
       ]);
 
-      // 각 style의 categories를 객체로 변환
-      const stylesObj = styles.map((style) => ({
-        ...style,
+      const data = styles.map((style) => ({
+        id: style.styleId,
+        thumbnail: style.styleImages?.[0]?.image?.url || null,
+        nickname: style.nickname,
+        title: style.title,
+        tags: style.styleTags.map((tagObj) => tagObj.tag.name),
         categories: categoriesArrayToObject(style.categories),
+        content: style.content,
+        viewCount: style.viewCount,
+        curationCount: style._count.curations,
+        createdAt: style.createdAt,
       }));
+      // console.log(`styles:`, styles[0])
 
-      res
-        .set('Content-Type', 'application/json')
-        .send(JSON.stringify({ total, styles: stylesObj }, jsonBigIntReplacer));
+      const totalPages = Math.ceil(totalItemCount / pageSize);
+
+      res.set('Content-Type', 'application/json').send(
+        JSON.stringify(
+          {
+            currentPage: Number(page),
+            totalPages,
+            totalItemCount,
+            data,
+          },
+          jsonBigIntReplacer
+        )
+      );
+      console.log(`data:`, data);
     } catch (err) {
       next(err);
     }

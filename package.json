@@ -16,7 +16,8 @@
     "start": "node index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "migrate:passwords": "node scripts/migrate-plain-passwords.js"
   },
   "repository": {
     "type": "git",

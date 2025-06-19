@@ -1,4 +1,17 @@
-import { object, optional, string, size, coerce, number, enums, min, array, create, StructError } from 'superstruct';
+import {
+  object,
+  optional,
+  string,
+  size,
+  coerce,
+  number,
+  enums,
+  min,
+  array,
+  create,
+  define,
+  StructError,
+} from 'superstruct';
 
 // ----------------------------------------------------------
 // CONSTANTS
@@ -6,10 +19,14 @@ import { object, optional, string, size, coerce, number, enums, min, array, crea
 const ID_MIN = 1;
 const PAGE_MIN = 1;
 const PAGE_SIZE_MIN = 0;
-const SORT_BY_ENUMS = {
+const SORT_BY_STYLE_ENUMS = {
   LATEST: 'latest',
   MOST_VIEWED: 'mostViewed',
   MOST_CURATED: 'mostCurated',
+};
+const SORT_BY_LOG_ENUMS = {
+  LATEST: 'latest',
+  OLDEST: 'oldest',
 };
 const SEARCH_BY_STYLE_ENUMS = {
   NICKNAME: 'nickname',
@@ -21,6 +38,14 @@ const SEARCH_BY_CURATION_ENUMS = {
   NICKNAME: 'nickname',
   CONTENT: 'content',
 };
+const SEARCH_BY_LOG_ENUMS = {
+  IP: 'ip',
+  MESSAGE: 'message',
+  METHOD: 'method',
+  URL: 'url',
+  STATUS_CODE: 'statusCode',
+  CREATED_AT: 'createdAt',
+};
 const RANK_BY_ENUMS = {
   TOTAL: 'total',
   TRENDY: 'trendy',
@@ -28,17 +53,17 @@ const RANK_BY_ENUMS = {
   PRACTICALITY: 'practicality',
   COST_EFFECTIVENESS: 'costEffectiveness',
 };
-const KEYWORD_MIN = 1;
+const KEYWORD_MIN = 0;
 const KEYWORD_MAX = 32;
 const NICKNAME_MIN = 1;
 const NICKNAME_MAX = 32;
-const TAG_MIN = 1;
+const TAG_MIN = 0;
 const TAG_MAX = 16;
 const TITLE_MIN = 1;
 const TITLE_MAX = 64;
 const CONTENT_MIN = 1;
 const CONTENT_MAX = 256;
-const PASSWORD_MIN = 4;
+const PASSWORD_MIN = 8;
 const PASSWORD_MAX = 16;
 const NAME_MIN = 1;
 const NAME_MAX = 64;
@@ -75,9 +100,11 @@ const integer = coerce(number(), string(), stringToInteger);
 const id = min(integer, ID_MIN);
 const page = min(integer, PAGE_MIN);
 const pageSize = min(integer, PAGE_SIZE_MIN);
-const sortBy = enums(Object.values(SORT_BY_ENUMS));
+const sortByStyle = enums(Object.values(SORT_BY_STYLE_ENUMS));
+const sortByLog = enums(Object.values(SORT_BY_LOG_ENUMS));
 const searchByStyle = enums(Object.values(SEARCH_BY_STYLE_ENUMS));
 const searchByCuration = enums(Object.values(SEARCH_BY_CURATION_ENUMS));
+const searchByLog = enums(Object.values(SEARCH_BY_LOG_ENUMS));
 const rankBy = enums(Object.values(RANK_BY_ENUMS));
 const keyword = size(string(), KEYWORD_MIN, KEYWORD_MAX);
 const tag = size(string(), TAG_MIN, TAG_MAX);
@@ -135,7 +162,7 @@ export const getStyleListSchema = {
   query: object({
     page: optional(page),
     pageSize: optional(pageSize),
-    sortBy: optional(sortBy),
+    sortBy: optional(sortByStyle),
     searchBy: optional(searchByStyle),
     keyword: optional(keyword),
     tag: optional(tag),
@@ -144,7 +171,15 @@ export const getStyleListSchema = {
 };
 // PUT:STYLE
 export const updateStyleSchema = {
-  body: object({}),
+  body: object({
+    nickname: nickname,
+    password: password,
+    title: title,
+    content: content,
+    categories: categories,
+    tags: tags,
+    imageUrls: imageUrls,
+  }),
   query: object({}),
   params: object({
     styleId: id,
@@ -152,7 +187,9 @@ export const updateStyleSchema = {
 };
 // DELETE:STYLE
 export const deleteStyleSchema = {
-  body: object({}),
+  body: object({
+    password: password,
+  }),
   query: object({}),
   params: object({
     styleId: id,
@@ -261,6 +298,18 @@ export const deleteCommentSchema = {
     commentId: id,
   }),
 };
+// GET:LOG_LIST
+export const getLogListSchema = {
+  body: object({}),
+  query: object({
+    page: optional(page),
+    pageSize: optional(pageSize),
+    sortBy: optional(sortByLog),
+    searchBy: optional(searchByLog),
+    keyword: optional(keyword),
+  }),
+  params: object({}),
+};
 
 // ----------------------------------------------------------
 // 검증 미들웨어
@@ -278,6 +327,7 @@ export const validateRequest = (schema = {}) => {
       // NEXT TO CONTROLLER
       next();
     } catch (error) {
+      console.log('validateRequest error:', error);
       if (error instanceof StructError) {
         error.statusCode = 400;
         error.message = undefined;
@@ -308,4 +358,6 @@ export default {
   createCommentSchema,
   updateCommentSchema,
   deleteCommentSchema,
+  // LOG
+  getLogListSchema,
 };

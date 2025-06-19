@@ -3,17 +3,18 @@ import morgan from 'morgan';
 import cors from 'cors';
 import fs from 'fs';
 
-import styleRouter from './routes/style-routes.js';
-
+import styleRouter from './routes/style-route.js';
 import curationRouter from './routes/curation-routes.js';
 import imageRouter from './routes/image-route.js';
-import commentRouter from './routes/comment-routes.js';
-import tagRouter from './routes/tag-routers.js';
+import commentRouter from './routes/comment-route.js';
+import tagRouter from './routes/tag-route.js';
 import rankRouter from './routes/rank-route.js';
 
 import errorHandler from './middlewares/error-middleware.js';
 import uploadsDir from './config/uploads-path.js';
-import rootRouter from './routes/root-routes.js';
+import rootRouter from './routes/root-route.js';
+import logRouter from './routes/log-route.js';
+import docRouter from './routes/doc-route.js';
 
 export default class Server {
   #app;
@@ -54,6 +55,8 @@ export default class Server {
     this.#app.use('/styles', styleRouter);
     this.#app.use('/curations', curationRouter);
     this.#app.use('/comments', commentRouter);
+    this.#app.use('/logs', logRouter);
+    this.#app.use('/docs', docRouter);
   }
 
   // 에러 핸들러 등록
